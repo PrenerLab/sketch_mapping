@@ -1,0 +1,82 @@
+---
+title: "Participant 104"
+author: "Christopher Prener, Ph.D."
+date: '(`r format(Sys.time(), "%B %d, %Y")`)'
+output: github_document
+params:
+  pid: 104
+---
+
+## Introduction
+This notebook is used for digitizing participant data for the `qualmap` pilot project.
+
+## Dependencies
+This notebook requires the following packages:
+
+```{r load-packages}
+# spatial packages
+library(qualmap)
+library(sf)
+
+# tidyverse packages
+library(readr)
+
+# other packages
+library(here)
+library(testthat)
+```
+
+## Load Reference Data
+First, we'll load the reference data from `data/grids/`:
+
+```{r load-data}
+grids <- st_read(here("data", "grid"), stringsAsFactors = FALSE)
+```
+
+## Define and Validate Participant Clusters
+First, we'll define the clusters associated with the "frequent" prompt:
+
+```{r define-frequent-clusters}
+cluster1 <- qm_define()
+```
+
+Next, we'll validate these data. The validation is performed in the context of a unit test to ensure that each object is valid:
+
+```{r validate-frequent-clusters}
+expect_equal(qm_validate(ref = grids, key = GRID_ID, value = cluster1), TRUE)
+```
+
+No output on these unit tests means that each cluster is indeed valid.
+
+Next, we'll repeat the process with the "regular" prompt by first entering the cluster data:
+
+```{r define-regular-clusters}
+
+```
+
+As before, we'll validate these data in the context of a unit test where no output means each is valid:
+
+```{r validate-frequent-clusters}
+
+```
+
+## Create Cluster Objects
+With all data validated, we can now convert each to cluster object. This process adds relevant metadata about each cluster:
+
+```{r create-cluster-objects}
+cluster1 <- qm_create(ref = grids, key = GRID_ID, value = cluster1, rid = params$pid, cid = 1, category = "frequent")
+```
+
+## Combine Cluster Objects
+With all of the cluster objects created, we can now combine them into a single object:
+
+```{r combine}
+clusters <- qm_combine(cluster1)
+```
+
+## Write Combined Object
+Finally, we'll write these data to a `.csv` file:
+
+```{r write-csv}
+write_csv(clusters, here("data", "participants", paste0("participant_", params$pid, ".csv")))
+```
