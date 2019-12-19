@@ -5,3 +5,5 @@ RID,CID,CAT,GRID_ID,COUNT
 144,3,frequent,G-3,1
 144,4,frequent,F-5,1
 144,5,frequent,F-5,1
+144,6,regular,E-2,1
+144,7,regular,F-3,1

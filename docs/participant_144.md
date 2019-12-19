@@ -77,7 +77,22 @@ expect_equal(qm_validate(ref = grids, key = GRID_ID, value = cluster5), TRUE)
 
 No output on these unit tests means that each cluster is indeed valid.
 
-**This participant did not mark any “regular” clusters.**
+Next, we’ll repeat the process with the “regular” prompt by first
+entering the cluster data:
+
+``` r
+cluster6 <- qm_define("E-2")
+cluster7 <- qm_define("F-3")
+```
+
+As before, we’ll validate these data in the context of a unit test where
+no output means each is
+valid:
+
+``` r
+expect_equal(qm_validate(ref = grids, key = GRID_ID, value = cluster6), TRUE)
+expect_equal(qm_validate(ref = grids, key = GRID_ID, value = cluster7), TRUE)
+```
 
 ## Create Cluster Objects
 
@@ -91,15 +106,19 @@ cluster2 <- qm_create(ref = grids, key = GRID_ID, value = cluster2, rid = params
 cluster3 <- qm_create(ref = grids, key = GRID_ID, value = cluster3, rid = params$pid, cid = 3, category = "frequent")
 cluster4 <- qm_create(ref = grids, key = GRID_ID, value = cluster4, rid = params$pid, cid = 4, category = "frequent")
 cluster5 <- qm_create(ref = grids, key = GRID_ID, value = cluster5, rid = params$pid, cid = 5, category = "frequent")
+cluster6 <- qm_create(ref = grids, key = GRID_ID, value = cluster6, rid = params$pid, cid = 6, category = "regular")
+cluster7 <- qm_create(ref = grids, key = GRID_ID, value = cluster7, rid = params$pid, cid = 7, category = "regular")
 ```
 
 ## Combine Cluster Objects
 
 With all of the cluster objects created, we can now combine them into a
-single object:
+single
+object:
 
 ``` r
-clusters <- qm_combine(cluster1, cluster2, cluster3, cluster4, cluster5)
+clusters <- qm_combine(cluster1, cluster2, cluster3, cluster4, cluster5, cluster6,
+                       cluster7)
 ```
 
 ## Write Combined Object
