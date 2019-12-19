@@ -1,0 +1,14 @@
+RID,CID,CAT,GRID_ID,COUNT
+146,1,frequent,F-3,1
+146,1,frequent,F-2,1
+146,2,frequent,F-3,1
+146,2,frequent,G-3,1
+146,3,regular,E-2,1
+146,4,regular,E-3,1
+146,4,regular,F-3,1
+146,4,regular,E-2,1
+146,4,regular,F-2,1
+146,5,regular,G-4,1
+146,5,regular,H-4,1
+146,5,regular,G-3,1
+146,5,regular,H-3,1

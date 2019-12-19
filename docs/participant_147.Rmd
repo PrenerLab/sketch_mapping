@@ -1,10 +1,10 @@
 ---
-title: "Participant 140"
+title: "Participant 147"
 author: "Christopher Prener, Ph.D."
 date: '(`r format(Sys.time(), "%B %d, %Y")`)'
 output: github_document
 params:
-  pid: 140
+  pid: 147
 ---
 
 ## Introduction
@@ -38,8 +38,8 @@ First, we'll define the clusters associated with the "frequent" prompt:
 
 ```{r define-frequent-clusters}
 cluster1 <- qm_define("F-3")
-cluster2 <- qm_define("F-3", "G-3")
-cluster3 <- qm_define("F-3", "G-3")
+cluster2 <- qm_define("F-3")
+cluster3 <- qm_define("G-3")
 ```
 
 Next, we'll validate these data. The validation is performed in the context of a unit test to ensure that each object is valid:
@@ -55,15 +55,13 @@ No output on these unit tests means that each cluster is indeed valid.
 Next, we'll repeat the process with the "regular" prompt by first entering the cluster data:
 
 ```{r define-regular-clusters}
-cluster4 <- qm_define("F-3", "F-4", "G-4")
-cluster5 <- qm_define("G-3", "H-3", "G-4", "H-4")
+cluster4 <- qm_define("C-2", "D-2")
 ```
 
 As before, we'll validate these data in the context of a unit test where no output means each is valid:
 
 ```{r validate-regular-clusters}
 expect_equal(qm_validate(ref = grids, key = GRID_ID, value = cluster4), TRUE)
-expect_equal(qm_validate(ref = grids, key = GRID_ID, value = cluster5), TRUE)
 ```
 
 ## Create Cluster Objects
@@ -74,14 +72,13 @@ cluster1 <- qm_create(ref = grids, key = GRID_ID, value = cluster1, rid = params
 cluster2 <- qm_create(ref = grids, key = GRID_ID, value = cluster2, rid = params$pid, cid = 2, category = "frequent")
 cluster3 <- qm_create(ref = grids, key = GRID_ID, value = cluster3, rid = params$pid, cid = 3, category = "frequent")
 cluster4 <- qm_create(ref = grids, key = GRID_ID, value = cluster4, rid = params$pid, cid = 4, category = "regular")
-cluster5 <- qm_create(ref = grids, key = GRID_ID, value = cluster5, rid = params$pid, cid = 5, category = "regular")
 ```
 
 ## Combine Cluster Objects
 With all of the cluster objects created, we can now combine them into a single object:
 
 ```{r combine}
-clusters <- qm_combine(cluster1, cluster2, cluster3, cluster4, cluster5)
+clusters <- qm_combine(cluster1, cluster2, cluster3, cluster4)
 ```
 
 ## Write Combined Object
