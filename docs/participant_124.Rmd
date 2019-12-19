@@ -1,10 +1,10 @@
 ---
-title: "Participant 120"
+title: "Participant 124"
 author: "Christopher Prener, Ph.D."
 date: '(`r format(Sys.time(), "%B %d, %Y")`)'
 output: github_document
 params:
-  pid: 120
+  pid: 124
 ---
 
 ## Introduction
@@ -37,7 +37,7 @@ grids <- st_read(here("data", "grid"), stringsAsFactors = FALSE)
 First, we'll define the clusters associated with the "frequent" prompt:
 
 ```{r define-frequent-clusters}
-cluster1 <- qm_define()
+cluster1 <- qm_define("F-3", "G-3", "H-3")
 ```
 
 Next, we'll validate these data. The validation is performed in the context of a unit test to ensure that each object is valid:
@@ -48,17 +48,7 @@ expect_equal(qm_validate(ref = grids, key = GRID_ID, value = cluster1), TRUE)
 
 No output on these unit tests means that each cluster is indeed valid.
 
-Next, we'll repeat the process with the "regular" prompt by first entering the cluster data:
-
-```{r define-regular-clusters}
-
-```
-
-As before, we'll validate these data in the context of a unit test where no output means each is valid:
-
-```{r validate-regular-clusters}
-
-```
+**This participation did not have any "regular" clusters."
 
 ## Create Cluster Objects
 With all data validated, we can now convert each to cluster object. This process adds relevant metadata about each cluster:

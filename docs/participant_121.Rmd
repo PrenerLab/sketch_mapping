@@ -1,10 +1,10 @@
 ---
-title: "Participant 120"
+title: "Participant 121"
 author: "Christopher Prener, Ph.D."
 date: '(`r format(Sys.time(), "%B %d, %Y")`)'
 output: github_document
 params:
-  pid: 120
+  pid: 121
 ---
 
 ## Introduction
@@ -37,13 +37,19 @@ grids <- st_read(here("data", "grid"), stringsAsFactors = FALSE)
 First, we'll define the clusters associated with the "frequent" prompt:
 
 ```{r define-frequent-clusters}
-cluster1 <- qm_define()
+cluster1 <- qm_define("E-3", "F-3", "F-4")
+cluster2 <- qm_define("G-3")
+cluster3 <- qm_define("G-3", "H-3", "G-4", "H-4")
+cluster4 <- qm_define("F-5", "F-6", "G-5", "G-6")
 ```
 
 Next, we'll validate these data. The validation is performed in the context of a unit test to ensure that each object is valid:
 
 ```{r validate-frequent-clusters}
 expect_equal(qm_validate(ref = grids, key = GRID_ID, value = cluster1), TRUE)
+expect_equal(qm_validate(ref = grids, key = GRID_ID, value = cluster2), TRUE)
+expect_equal(qm_validate(ref = grids, key = GRID_ID, value = cluster3), TRUE)
+expect_equal(qm_validate(ref = grids, key = GRID_ID, value = cluster4), TRUE)
 ```
 
 No output on these unit tests means that each cluster is indeed valid.
@@ -51,13 +57,17 @@ No output on these unit tests means that each cluster is indeed valid.
 Next, we'll repeat the process with the "regular" prompt by first entering the cluster data:
 
 ```{r define-regular-clusters}
-
+cluster5 <- qm_define("B-2", "B-3")
+cluster6 <- qm_define("B-1", "B-2", "C-1", "C-2")
+cluster7 <- qm_define("C-4", "C-5", "D-4", "D-5")
 ```
 
 As before, we'll validate these data in the context of a unit test where no output means each is valid:
 
 ```{r validate-regular-clusters}
-
+expect_equal(qm_validate(ref = grids, key = GRID_ID, value = cluster5), TRUE)
+expect_equal(qm_validate(ref = grids, key = GRID_ID, value = cluster6), TRUE)
+expect_equal(qm_validate(ref = grids, key = GRID_ID, value = cluster7), TRUE)
 ```
 
 ## Create Cluster Objects
@@ -65,13 +75,20 @@ With all data validated, we can now convert each to cluster object. This process
 
 ```{r create-cluster-objects, warning=FALSE}
 cluster1 <- qm_create(ref = grids, key = GRID_ID, value = cluster1, rid = params$pid, cid = 1, category = "frequent")
+cluster2 <- qm_create(ref = grids, key = GRID_ID, value = cluster2, rid = params$pid, cid = 2, category = "frequent")
+cluster3 <- qm_create(ref = grids, key = GRID_ID, value = cluster3, rid = params$pid, cid = 3, category = "frequent")
+cluster4 <- qm_create(ref = grids, key = GRID_ID, value = cluster4, rid = params$pid, cid = 4, category = "frequent")
+cluster5 <- qm_create(ref = grids, key = GRID_ID, value = cluster5, rid = params$pid, cid = 5, category = "regular")
+cluster6 <- qm_create(ref = grids, key = GRID_ID, value = cluster6, rid = params$pid, cid = 6, category = "regular")
+cluster7 <- qm_create(ref = grids, key = GRID_ID, value = cluster7, rid = params$pid, cid = 7, category = "regular")
 ```
 
 ## Combine Cluster Objects
 With all of the cluster objects created, we can now combine them into a single object:
 
 ```{r combine}
-clusters <- qm_combine(cluster1)
+clusters <- qm_combine(cluster1, cluster2, cluster3, cluster4, cluster5, cluster6,
+                       cluster7)
 ```
 
 ## Write Combined Object
