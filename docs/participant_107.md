@@ -1,7 +1,7 @@
 Participant 107
 ================
 Christopher Prener, Ph.D.
-(December 18, 2019)
+(January 30, 2020)
 
 ## Introduction
 
@@ -16,21 +16,12 @@ This notebook requires the following packages:
 # spatial packages
 library(qualmap)
 library(sf)
-```
 
-    ## Linking to GEOS 3.6.1, GDAL 2.1.3, PROJ 4.9.3
-
-``` r
 # tidyverse packages
 library(readr)
 
 # other packages
 library(here)
-```
-
-    ## here() starts at /Users/prenercg/GitHub/PrenerLab/sketch_mapping
-
-``` r
 library(testthat)
 ```
 
@@ -102,43 +93,37 @@ cluster:
 cluster1 <- qm_create(ref = grids, key = GRID_ID, value = cluster1, rid = params$pid, cid = 1, category = "frequent")
 ```
 
-    ## Warning: Column `GRID_ID` joining character vector and factor, coercing
-    ## into character vector
+    ## Warning: Column `GRID_ID` joining character vector and factor, coercing into character vector
 
 ``` r
 cluster2 <- qm_create(ref = grids, key = GRID_ID, value = cluster2, rid = params$pid, cid = 2, category = "frequent")
 ```
 
-    ## Warning: Column `GRID_ID` joining character vector and factor, coercing
-    ## into character vector
+    ## Warning: Column `GRID_ID` joining character vector and factor, coercing into character vector
 
 ``` r
 cluster3 <- qm_create(ref = grids, key = GRID_ID, value = cluster3, rid = params$pid, cid = 3, category = "frequent")
 ```
 
-    ## Warning: Column `GRID_ID` joining character vector and factor, coercing
-    ## into character vector
+    ## Warning: Column `GRID_ID` joining character vector and factor, coercing into character vector
 
 ``` r
 cluster4 <- qm_create(ref = grids, key = GRID_ID, value = cluster4, rid = params$pid, cid = 4, category = "frequent")
 ```
 
-    ## Warning: Column `GRID_ID` joining character vector and factor, coercing
-    ## into character vector
+    ## Warning: Column `GRID_ID` joining character vector and factor, coercing into character vector
 
 ``` r
 cluster5 <- qm_create(ref = grids, key = GRID_ID, value = cluster5, rid = params$pid, cid = 5, category = "frequent")
 ```
 
-    ## Warning: Column `GRID_ID` joining character vector and factor, coercing
-    ## into character vector
+    ## Warning: Column `GRID_ID` joining character vector and factor, coercing into character vector
 
 ``` r
 cluster6 <- qm_create(ref = grids, key = GRID_ID, value = cluster6, rid = params$pid, cid = 6, category = "regular")
 ```
 
-    ## Warning: Column `GRID_ID` joining character vector and factor, coercing
-    ## into character vector
+    ## Warning: Column `GRID_ID` joining character vector and factor, coercing into character vector
 
 ## Combine Cluster Objects
 

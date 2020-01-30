@@ -1,7 +1,7 @@
 Participant 147
 ================
 Christopher Prener, Ph.D.
-(December 19, 2019)
+(January 30, 2020)
 
 ## Introduction
 
@@ -16,21 +16,12 @@ This notebook requires the following packages:
 # spatial packages
 library(qualmap)
 library(sf)
-```
 
-    ## Linking to GEOS 3.6.1, GDAL 2.1.3, PROJ 4.9.3
-
-``` r
 # tidyverse packages
 library(readr)
 
 # other packages
 library(here)
-```
-
-    ## here() starts at /Users/prenercg/GitHub/PrenerLab/sketch_mapping
-
-``` r
 library(testthat)
 ```
 

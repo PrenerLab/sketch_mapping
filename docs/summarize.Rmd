@@ -1,0 +1,41 @@
+---
+title: "Summarize Clusters"
+author: "Christopher Prener, Ph.D."
+date: '(`r format(Sys.time(), "%B %d, %Y")`)'
+output: github_document
+---
+
+## Introduction
+This notebook imports all of the raw cluster data and summarizes it into mappable `sf` objects.
+
+## Dependencies
+This notebook requires the following packages:
+
+```{r load-packages}
+# spatial packages
+library(qualmap)
+
+# tidyverse packages
+library(dplyr)
+library(readr)
+
+# other packages
+library(here)
+```
+
+## Load Data
+This notebook requires...
+
+```{r load-data}
+
+```
+
+## Part 1
+### Question 1
+A description of what your code should accomplish.
+
+```{r p1-q1}
+
+```
+
+A description of the results.
