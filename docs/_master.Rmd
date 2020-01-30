@@ -30,7 +30,7 @@ files <- dir(path = here("docs"), pattern = "*.Rmd")
 
 ## Knit Participant Documents
 
-```{r render-participants, echo=FALSE, results='hide', message=FALSE}
+```{r render-participants}
 # isolate participant files
 participant_files <- grep("^participant", files, value = TRUE)
 

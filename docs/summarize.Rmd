@@ -14,9 +14,11 @@ This notebook requires the following packages:
 ```{r load-packages}
 # spatial packages
 library(qualmap)
+library(sf)
 
 # tidyverse packages
 library(dplyr)
+library(purrr)
 library(readr)
 
 # other packages
@@ -24,18 +26,57 @@ library(here)
 ```
 
 ## Load Data
-This notebook requires...
+First, we need to create a list of the `.csv` files to be read in:
+
+```{r create-file-list}
+files <- dir(path = here("data", "participants"), pattern = ".csv")
+```
+
+Next, we can read them in and reduce them to a single data frame with `purrr`:
 
 ```{r load-data}
-
+data <- files %>%
+  map_df(~read_csv(file = here("data", "participants", .x)))
 ```
 
-## Part 1
-### Question 1
-A description of what your code should accomplish.
+Finally, we'll load the reference data from `data/grids/`:
 
-```{r p1-q1}
-
+```{r load-ref-data}
+grids <- st_read(here("data", "grid"), stringsAsFactors = FALSE)
 ```
 
-A description of the results.
+## Verify
+Next, we can use the `qualmap` function `qm_verify()` to ensure we have data that are appropriate for summarization:
+
+```{r verify}
+data <- qm_verify(data)
+```
+
+`qm_verify` will error if there is an issue. Otherwise, it returns a tibble with the class `"qm_cluster"` applied to it, which is necessary for using `qm_summarize()` below.
+
+## Summarize
+The `qualmap` package comes with two options for counting, by cluster and respondent. Theoretically, a feature could be included in multiple clusters by a single respondent. Setting `count = "clusters"` will return a count of the number of clusters that a feature is included in, whereas `count = "respondents"` returns a count of the number of respondents who identified that feature in at least one cluster.
+
+We'll create output using both options for the "frequent" qualitative construct:
+
+```{r frequent}
+freq_clusters <- qm_summarize(ref = grids, key = "GRID_ID", clusters = data, category = "frequent", count = "clusters")
+freq_respondents <- qm_summarize(ref = grids, key = "GRID_ID", clusters = data, category = "frequent", count = "respondents")
+```
+
+We'll also create output using both options for the "regular" qualitative construct:
+
+```{r regular}
+reg_clusters <- qm_summarize(ref = grids, key = "GRID_ID", clusters = data, category = "regular", count = "clusters")
+reg_respondents <- qm_summarize(ref = grids, key = "GRID_ID", clusters = data, category = "regular", count = "respondents")
+```
+
+## Write Data
+Finally, we'll write each of the files to `data/` as shapefiles:
+
+```{r write-data}
+st_write(freq_clusters, here("data", "summaries", "freq_clusters", "freq_clusters.shp"), delete_dsn = TRUE)
+st_write(freq_respondents, here("data", "summaries", "freq_respondents", "freq_respondents.shp"), delete_dsn = TRUE)
+st_write(reg_clusters, here("data", "summaries", "reg_clusters", "reg_clusters.shp"), delete_dsn = TRUE)
+st_write(reg_respondents, here("data", "summaries", "reg_respondents", "reg_respondents.shp"), delete_dsn = TRUE)
+```
