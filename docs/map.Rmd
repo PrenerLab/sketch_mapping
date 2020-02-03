@@ -1,0 +1,66 @@
+---
+title: "Map Clusters"
+author: "Christopher Prener, Ph.D."
+date: '(`r format(Sys.time(), "%B %d, %Y")`)'
+output: github_document
+---
+
+## Introduction
+This notebook imports the shapefiles created by `summarize.Rmd` and maps them.
+
+## Dependencies
+This notebook requires the following packages:
+
+```{r load-packages}
+# spatial packages
+library(sf)
+library(tmap)
+
+# tidyverse packages
+library(dplyr)
+
+# other packages
+library(here)
+```
+
+## Load Data
+The following shapefiles are needed:
+
+```{r load-data}
+freq_clusters <- st_read(here("data", "summaries", "freq_clusters"), stringsAsFactors = FALSE)
+freq_respondents <- st_read(here("data", "summaries", "freq_respondents"), stringsAsFactors = FALSE)
+reg_respondents <- st_read(here("data", "summaries", "reg_respondents"), stringsAsFactors = FALSE)
+```
+
+```{r}
+
+tm_shape(freq_clusters) +
+  tm_polygons(col = "frequent", style = "jenks") +
+  tm_layout(title = "Frequent Visits, by Cluster",
+            frame = FALSE) +
+  tm_legend(outside = TRUE)
+```
+
+```{r}
+freq_respondents <- mutate(freq_respondents, frequent_pct = frequent/53*100)
+
+breaks <- c(0, 8, 16.5, 33, 66, 100)
+
+tm_shape(freq_respondents) +
+  tm_polygons(col = "frequent_pct", breaks = breaks, palette = "Blues") +
+  tm_layout(title = "Frequent Visits \nby % of Respondents",
+            frame = FALSE) +
+  tm_legend(outside = TRUE)
+```
+
+```{r}
+reg_respondents <- mutate(reg_respondents, regular_pct = regular/53*100)
+
+breaks <- c(0, 8, 16.5, 33, 66, 100)
+
+tm_shape(reg_respondents) +
+  tm_polygons(col = "regular_pct", breaks = breaks, palette = "Greens") +
+  tm_layout(title = "Regular Visits \nby % of Respondents",
+            frame = FALSE) +
+  tm_legend(outside = TRUE)
+```
