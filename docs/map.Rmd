@@ -24,21 +24,120 @@ library(here)
 ```
 
 ## Load Data
-The following shapefiles are needed:
+The following shapefiles with participant data are needed:
 
 ```{r load-data}
-freq_clusters <- st_read(here("data", "summaries", "freq_clusters"), stringsAsFactors = FALSE)
-freq_respondents <- st_read(here("data", "summaries", "freq_respondents"), stringsAsFactors = FALSE)
-reg_respondents <- st_read(here("data", "summaries", "reg_respondents"), stringsAsFactors = FALSE)
+freq_clusters <- st_read(here("data", "summaries", "freq_clusters"), stringsAsFactors = FALSE) %>%
+  st_transform(crs = 26915)
+
+freq_respondents <- st_read(here("data", "summaries", "freq_respondents"), stringsAsFactors = FALSE) %>%
+  st_transform(crs = 26915)
+
+reg_clusters <- st_read(here("data", "summaries", "reg_clusters"), stringsAsFactors = FALSE) %>%
+  st_transform(crs = 26915)
+
+reg_respondents <- st_read(here("data", "summaries", "reg_respondents"), stringsAsFactors = FALSE) %>%
+  st_transform(crs = 26915)
 ```
+
+These additional shapefiles are also used for mapping:
+
+```{r}
+metro <- st_read(here("data", "spatial", "STL_TRANS_Metrolink"), stringsAsFactors = FALSE) %>%
+  st_transform(crs = 26915)
+
+roads <- st_read(here("data", "spatial", "STL_TRANS_PrimaryRoads"), stringsAsFactors = FALSE) %>%
+  st_transform(crs = 26915)
+
+campus <- st_read(here("data", "spatial", "ZONE_CAMPUS_SLU"), stringsAsFactors = FALSE) %>%
+  st_transform(crs = 26915)
+```
+
+## Geoprocessing Data
+
+```{r}
+freq_clusters %>%
+  mutate(id = 1) %>%
+  group_by(id) %>%
+  summarise(name = "study area") -> study_area
+```
+
+```{r}
+roads <- st_crop(roads, study_area) %>%
+  filter(RTTYP == "I")
+```
+
+```{r}
+metro <- st_crop(metro, study_area)
+```
+
+```{r}
+freq_clusters <- st_transform(freq_clusters, crs = 4269)
+freq_respondents <- st_transform(freq_respondents, crs = 4269)
+reg_respondents <- st_transform(reg_respondents, crs = 4269)
+reg_clusters <- st_transform(reg_clusters, crs = 4269)
+
+roads <- st_transform(roads, crs = 4269)
+campus <- st_transform(campus, crs = 4269)
+metro <- st_transform(metro, crs = 4269)
+```
+
+```{r}
+labels <- tibble(
+  name = c("North Campus", "South Campus"),
+  x = c(-90.227857, -90.231888),
+  y = c(38.637693, 38.620462)
+)
+
+labels <- st_as_sf(labels, coords = c("x", "y"), crs = 4269)
+```
+
+```{r}
+nhood <- tibble(
+  name = c("Central West End", "Grand Center", "Forest Park Southeast"),
+  x = c(-90.255050, -90.232176, -90.256972),
+  y = c(38.641675, 38.642287, 38.626802)
+)
+
+nhood <- st_as_sf(nhood, coords = c("x", "y"), crs = 4269)
+
+```
+
+```{r}
+features <- tibble(
+  name = c("I-44", "I-64", "Metro"),
+  x = c(-90.274276, -90.274036, -90.274161),
+  y = c(38.617122, 38.628091, 38.641927)
+)
+
+features <- st_as_sf(features, coords = c("x", "y"), crs = 4269)
+
+```
+
 
 ```{r}
 
 tm_shape(freq_clusters) +
-  tm_polygons(col = "frequent", style = "jenks") +
-  tm_layout(title = "Frequent Visits, by Cluster",
-            frame = FALSE) +
-  tm_legend(outside = TRUE)
+    tm_polygons(title = "Count of Clusters", col = "frequent", style = "jenks") +
+  tm_shape(roads) +
+    tm_lines(lwd = 1.5, col = "#474747") +
+  tm_shape(metro) +
+    tm_lines() +
+  tm_shape(campus) +
+    tm_borders(lwd = 2, col = "#000000") +
+  tm_shape(labels) +
+    tm_text("name", fontface = 2, just = "left", size = .85, shadow = TRUE) +
+  tm_shape(nhood) +
+    tm_text("name", fontface = 4, size = .75, shadow = TRUE) +
+  tm_shape(features) +
+    tm_text("name", fontface = 3, just = "bottom", size = .75, shadow = TRUE) +
+  tm_layout(title = "Frequent Visits \nby Cluster",
+            frame = FALSE, outer.margins = c(0,0,0,0)) +
+  tm_credits("Map by Christopher Prener, Ph.D.\nCount of clusters for visiting areas at least twice per week", 
+             position=c("left", "bottom"), just = "bottom") +
+  tm_legend(outside = TRUE, attr.outside = TRUE) -> freq_clusters_map
+
+tmap_save(tm = freq_clusters_map, filename = "freq_clusters_map.png", dpi = 500)
 ```
 
 ```{r}
@@ -47,20 +146,80 @@ freq_respondents <- mutate(freq_respondents, frequent_pct = frequent/53*100)
 breaks <- c(0, 8, 16.5, 33, 66, 100)
 
 tm_shape(freq_respondents) +
-  tm_polygons(col = "frequent_pct", breaks = breaks, palette = "Blues") +
-  tm_layout(title = "Frequent Visits \nby % of Respondents",
-            frame = FALSE) +
-  tm_legend(outside = TRUE)
+    tm_polygons(title = "% of Respondents", col = "frequent_pct", 
+                breaks = breaks, palette = "Blues") +
+  tm_shape(roads) +
+    tm_lines(lwd = 1.5, col = "#474747") +
+  tm_shape(metro) +
+    tm_lines() +
+  tm_shape(campus) +
+    tm_borders(lwd = 2, col = "#000000") +
+  tm_shape(labels) +
+    tm_text("name", fontface = 2, just = "left", size = .85, shadow = TRUE) +
+  tm_shape(nhood) +
+    tm_text("name", fontface = 4, size = .75, shadow = TRUE) +
+  tm_shape(features) +
+    tm_text("name", fontface = 3, just = "bottom", size = .75, shadow = TRUE) +
+  tm_layout(title = "Frequent Visits \nby Respondent",
+            frame = FALSE, outer.margins = c(0,0,0,0)) +
+  tm_credits("Map by Christopher Prener, Ph.D.\n% of respondents who visit areas at least twice per week", 
+             position=c("left", "bottom"), just = "bottom") +
+  tm_legend(outside = TRUE, attr.outside = TRUE) -> freq_respondents_map
+
+tmap_save(tm = freq_respondents_map, filename = "freq_respondents_map.png", dpi = 500)
+```
+
+```{r}
+
+tm_shape(reg_clusters) +
+    tm_polygons(title = "Count of Clusters", col = "regular", 
+                style = "jenks", palette = "Reds") +
+  tm_shape(roads) +
+    tm_lines(lwd = 1.5, col = "#474747") +
+  tm_shape(metro) +
+    tm_lines() +
+  tm_shape(campus) +
+    tm_borders(lwd = 2, col = "#000000") +
+  tm_shape(labels) +
+    tm_text("name", fontface = 2, just = "left", size = .85, shadow = TRUE) +
+  tm_shape(nhood) +
+    tm_text("name", fontface = 4, size = .75, shadow = TRUE) +
+  tm_shape(features) +
+    tm_text("name", fontface = 3, just = "bottom", size = .75, shadow = TRUE) +
+  tm_layout(title = "Regular Visits \nby Cluster",
+            frame = FALSE, outer.margins = c(0,0,0,0)) +
+  tm_credits("Map by Christopher Prener, Ph.D.\nCount of clusters for visiting areas two to four times per month", 
+             position=c("left", "bottom"), just = "bottom") +
+  tm_legend(outside = TRUE, attr.outside = TRUE) -> reg_clusters_map
+
+tmap_save(tm = reg_clusters_map, filename = "reg_clusters_map.png", dpi = 500)
 ```
 
 ```{r}
 reg_respondents <- mutate(reg_respondents, regular_pct = regular/53*100)
 
-breaks <- c(0, 8, 16.5, 33, 66, 100)
+breaks <- c(0, 8, 16.5, 33, 49.5, 66)
 
 tm_shape(reg_respondents) +
-  tm_polygons(col = "regular_pct", breaks = breaks, palette = "Greens") +
+    tm_polygons(title = "% of Respondents", col = "regular_pct", 
+                breaks = breaks, palette = "Greens") +
+  tm_shape(roads) +
+    tm_lines(lwd = 1.5, col = "#474747") +
+  tm_shape(metro) +
+    tm_lines() +
+  tm_shape(campus) +
+    tm_borders(lwd = 2, col = "#000000") +
+  tm_shape(labels) +
+    tm_text("name", fontface = 2, just = "left", size = .85, shadow = TRUE) +
+  tm_shape(nhood) +
+    tm_text("name", fontface = 4, size = .75, shadow = TRUE) +
+  tm_shape(features) +
+    tm_text("name", fontface = 3, just = "bottom", size = .75, shadow = TRUE) +
   tm_layout(title = "Regular Visits \nby % of Respondents",
-            frame = FALSE) +
-  tm_legend(outside = TRUE)
+            frame = FALSE, outer.margins = c(0,0,0,0)) +
+  tm_credits("Map by Christopher Prener, Ph.D.\n% of respondents who visit areas two to four times per month", 
+             position=c("left", "bottom"), just = "bottom") +
+  tm_legend(outside = TRUE, attr.outside = TRUE) -> reg_respondents_map
+
+tmap_save(tm = reg_respondents_map, filename = "reg_respondents_map.png", dpi = 500)
 ```
