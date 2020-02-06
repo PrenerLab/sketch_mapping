@@ -85,8 +85,8 @@ metro <- st_transform(metro, crs = 4269)
 ```{r}
 labels <- tibble(
   name = c("North Campus", "South Campus"),
-  x = c(-90.227857, -90.231888),
-  y = c(38.637693, 38.620462)
+  x = c(-90.235964, -90.236005),
+  y = c(38.639756, 38.620040)
 )
 
 labels <- st_as_sf(labels, coords = c("x", "y"), crs = 4269)
@@ -106,8 +106,8 @@ nhood <- st_as_sf(nhood, coords = c("x", "y"), crs = 4269)
 ```{r}
 features <- tibble(
   name = c("I-44", "I-64", "Metro"),
-  x = c(-90.274276, -90.274036, -90.274161),
-  y = c(38.617122, 38.628091, 38.641927)
+  x = c(-90.268058, -90.268058, -90.265650),
+  y = c(38.616898, 38.628251, 38.642927)
 )
 
 features <- st_as_sf(features, coords = c("x", "y"), crs = 4269)
@@ -126,18 +126,17 @@ tm_shape(freq_clusters) +
   tm_shape(campus) +
     tm_borders(lwd = 2, col = "#000000") +
   tm_shape(labels) +
-    tm_text("name", fontface = 2, just = "left", size = .85, shadow = TRUE) +
+    tm_text("name", fontface = 2, just = "left", size = 1, shadow = TRUE) +
   tm_shape(nhood) +
     tm_text("name", fontface = 4, size = .75, shadow = TRUE) +
   tm_shape(features) +
     tm_text("name", fontface = 3, just = "bottom", size = .75, shadow = TRUE) +
   tm_layout(title = "Frequent Visits \nby Cluster",
-            frame = FALSE, outer.margins = c(0,0,0,0)) +
-  tm_credits("Map by Christopher Prener, Ph.D.\nCount of clusters for visiting areas at least twice per week", 
-             position=c("left", "bottom"), just = "bottom") +
+            frame = FALSE, outer.margins = c(0, 0, 0, 0)) +
+  tm_scale_bar(position=c("right", "bottom"), just = "top") +
   tm_legend(outside = TRUE, attr.outside = TRUE) -> freq_clusters_map
 
-tmap_save(tm = freq_clusters_map, filename = "freq_clusters_map.png", dpi = 500)
+tmap_save(tm = freq_clusters_map, filename = here("results", "freq_clusters_map.png"), dpi = 500)
 ```
 
 ```{r}
@@ -155,18 +154,44 @@ tm_shape(freq_respondents) +
   tm_shape(campus) +
     tm_borders(lwd = 2, col = "#000000") +
   tm_shape(labels) +
-    tm_text("name", fontface = 2, just = "left", size = .85, shadow = TRUE) +
+    tm_text("name", fontface = 2, just = "left", size = 1, shadow = TRUE) +
   tm_shape(nhood) +
     tm_text("name", fontface = 4, size = .75, shadow = TRUE) +
   tm_shape(features) +
     tm_text("name", fontface = 3, just = "bottom", size = .75, shadow = TRUE) +
   tm_layout(title = "Frequent Visits \nby Respondent",
             frame = FALSE, outer.margins = c(0,0,0,0)) +
-  tm_credits("Map by Christopher Prener, Ph.D.\n% of respondents who visit areas at least twice per week", 
-             position=c("left", "bottom"), just = "bottom") +
+  tm_scale_bar(position=c("right", "bottom"), just = "top") +
   tm_legend(outside = TRUE, attr.outside = TRUE) -> freq_respondents_map
 
-tmap_save(tm = freq_respondents_map, filename = "freq_respondents_map.png", dpi = 500)
+tmap_save(tm = freq_respondents_map, filename = here("results", "freq_respondents_map.png"), dpi = 500)
+```
+
+```{r}
+freq_respondents <- mutate(freq_respondents, frequent_pct = frequent/53*100)
+
+breaks <- c(0, 8, 16.5, 33, 66, 100)
+
+tm_shape(freq_respondents) +
+    tm_polygons(title = "% of Respondents", col = "frequent_pct", 
+                breaks = breaks, palette = "Blues") +
+  tm_shape(roads) +
+    tm_lines(lwd = 1.5, col = "#474747") +
+  tm_shape(metro) +
+    tm_lines() +
+  tm_shape(campus) +
+    tm_borders(lwd = 2, col = "#000000") +
+  tm_shape(labels) +
+    tm_text("name", fontface = 2, just = "left", size = 1, shadow = TRUE) +
+  tm_shape(nhood) +
+    tm_text("name", fontface = 4, size = .75, shadow = TRUE) +
+  tm_shape(features) +
+    tm_text("name", fontface = 3, just = "bottom", size = .75, shadow = TRUE) +
+  tm_layout(frame = FALSE, outer.margins = c(0,0,0,0)) +
+  tm_scale_bar(position=c("right", "bottom"), just = "top") +
+  tm_legend(outside = TRUE, attr.outside = TRUE) -> freq_respondents_map
+
+tmap_save(tm = freq_respondents_map, filename = here("results", "figure4.png"), dpi = 500)
 ```
 
 ```{r}
@@ -181,18 +206,17 @@ tm_shape(reg_clusters) +
   tm_shape(campus) +
     tm_borders(lwd = 2, col = "#000000") +
   tm_shape(labels) +
-    tm_text("name", fontface = 2, just = "left", size = .85, shadow = TRUE) +
+    tm_text("name", fontface = 2, just = "left", size = 1, shadow = TRUE) +
   tm_shape(nhood) +
     tm_text("name", fontface = 4, size = .75, shadow = TRUE) +
   tm_shape(features) +
     tm_text("name", fontface = 3, just = "bottom", size = .75, shadow = TRUE) +
   tm_layout(title = "Regular Visits \nby Cluster",
             frame = FALSE, outer.margins = c(0,0,0,0)) +
-  tm_credits("Map by Christopher Prener, Ph.D.\nCount of clusters for visiting areas two to four times per month", 
-             position=c("left", "bottom"), just = "bottom") +
+  tm_scale_bar(position=c("right", "bottom"), just = "top") +
   tm_legend(outside = TRUE, attr.outside = TRUE) -> reg_clusters_map
 
-tmap_save(tm = reg_clusters_map, filename = "reg_clusters_map.png", dpi = 500)
+tmap_save(tm = reg_clusters_map, filename = here("results", "reg_clusters_map.png"), dpi = 500)
 ```
 
 ```{r}
@@ -210,16 +234,42 @@ tm_shape(reg_respondents) +
   tm_shape(campus) +
     tm_borders(lwd = 2, col = "#000000") +
   tm_shape(labels) +
-    tm_text("name", fontface = 2, just = "left", size = .85, shadow = TRUE) +
+    tm_text("name", fontface = 2, just = "left", size = 1, shadow = TRUE) +
   tm_shape(nhood) +
     tm_text("name", fontface = 4, size = .75, shadow = TRUE) +
   tm_shape(features) +
     tm_text("name", fontface = 3, just = "bottom", size = .75, shadow = TRUE) +
   tm_layout(title = "Regular Visits \nby % of Respondents",
             frame = FALSE, outer.margins = c(0,0,0,0)) +
-  tm_credits("Map by Christopher Prener, Ph.D.\n% of respondents who visit areas two to four times per month", 
-             position=c("left", "bottom"), just = "bottom") +
+  tm_scale_bar(position=c("right", "bottom"), just = "top") +
   tm_legend(outside = TRUE, attr.outside = TRUE) -> reg_respondents_map
 
-tmap_save(tm = reg_respondents_map, filename = "reg_respondents_map.png", dpi = 500)
+tmap_save(tm = reg_respondents_map, filename = here("results", "reg_respondents_map.png"), dpi = 500)
+```
+
+```{r}
+reg_respondents <- mutate(reg_respondents, regular_pct = regular/53*100)
+
+breaks <- c(0, 8, 16.5, 33, 49.5, 66)
+
+tm_shape(reg_respondents) +
+    tm_polygons(title = "% of Respondents", col = "regular_pct", 
+                breaks = breaks, palette = "Greens") +
+  tm_shape(roads) +
+    tm_lines(lwd = 1.5, col = "#474747") +
+  tm_shape(metro) +
+    tm_lines() +
+  tm_shape(campus) +
+    tm_borders(lwd = 2, col = "#000000") +
+  tm_shape(labels) +
+    tm_text("name", fontface = 2, just = "left", size = 1, shadow = TRUE) +
+  tm_shape(nhood) +
+    tm_text("name", fontface = 4, size = .75, shadow = TRUE) +
+  tm_shape(features) +
+    tm_text("name", fontface = 3, just = "bottom", size = .75, shadow = TRUE) +
+  tm_layout(frame = FALSE, outer.margins = c(0,0,0,0)) +
+  tm_scale_bar(position=c("right", "bottom"), just = "top") +
+  tm_legend(outside = TRUE, attr.outside = TRUE) -> reg_respondents_map
+
+tmap_save(tm = reg_respondents_map, filename = here("results", "figure5.png"), dpi = 500)
 ```
