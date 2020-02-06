@@ -20,6 +20,7 @@ library(sf)
 library(dplyr)
 library(purrr)
 library(readr)
+library(tidyr)
 
 # other packages
 library(here)
@@ -44,6 +45,17 @@ Finally, we'll load the reference data from `data/grids/`:
 ```{r load-ref-data}
 grids <- st_read(here("data", "grid"), stringsAsFactors = FALSE)
 ```
+
+## Modify Grid
+Not all grid squares were shown on the instrument, so we'll remove some of the outer grid squares:
+
+```{r}
+grids %>% 
+  separate(GRID_ID, into = c("col", "row"), sep = "-", remove = FALSE) %>%
+  filter(col != "A") %>%
+  filter(col != "I") -> grids
+```
+
 
 ## Verify
 Next, we can use the `qualmap` function `qm_verify()` to ensure we have data that are appropriate for summarization:
