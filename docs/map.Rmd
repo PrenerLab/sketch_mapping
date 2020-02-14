@@ -18,8 +18,10 @@ library(tmap)
 
 # tidyverse packages
 library(dplyr)
+library(ggplot2)
 
 # other packages
+library(cowplot)
 library(here)
 ```
 
@@ -37,6 +39,9 @@ reg_clusters <- st_read(here("data", "summaries", "reg_clusters"), stringsAsFact
   st_transform(crs = 26915)
 
 reg_respondents <- st_read(here("data", "summaries", "reg_respondents"), stringsAsFactors = FALSE) %>%
+  st_transform(crs = 26915)
+
+crime <- st_read(here("data", "crime", "crime_grid"), stringsAsFactors = FALSE) %>%
   st_transform(crs = 26915)
 ```
 
@@ -76,6 +81,8 @@ freq_clusters <- st_transform(freq_clusters, crs = 4269)
 freq_respondents <- st_transform(freq_respondents, crs = 4269)
 reg_respondents <- st_transform(reg_respondents, crs = 4269)
 reg_clusters <- st_transform(reg_clusters, crs = 4269)
+
+crime <- st_transform(crime, crs = 4269)
 
 roads <- st_transform(roads, crs = 4269)
 campus <- st_transform(campus, crs = 4269)
@@ -273,3 +280,113 @@ tm_shape(reg_respondents) +
 
 tmap_save(tm = reg_respondents_map, filename = here("results", "figure5.png"), dpi = 500)
 ```
+
+```{r}
+# reg_respondents <- mutate(reg_respondents, regular_pct = regular/53*100)
+
+# breaks <- c(0, 8, 16.5, 33, 49.5, 66)
+
+tm_shape(crime) +
+    tm_polygons(title = "Property Crime Rates\nper 1,000 Estimated Residents", col = "prprty_", 
+                style = "jenks", palette = "BuGn") +
+  tm_shape(roads) +
+    tm_lines(lwd = 1.5, col = "#474747") +
+  tm_shape(metro) +
+    tm_lines() +
+  tm_shape(campus) +
+    tm_borders(lwd = 2, col = "#000000") +
+  tm_shape(labels) +
+    tm_text("name", fontface = 2, just = "left", size = 1, shadow = TRUE) +
+  tm_shape(nhood) +
+    tm_text("name", fontface = 4, size = .75, shadow = TRUE) +
+  tm_shape(features) +
+    tm_text("name", fontface = 3, just = "bottom", size = .75, shadow = TRUE) +
+  tm_layout(frame = FALSE, outer.margins = c(0,0,0,0)) +
+  tm_scale_bar(position=c("right", "bottom"), just = "top") +
+  tm_legend(outside = TRUE, attr.outside = TRUE) -> property_map
+
+tmap_save(tm = property_map, filename = here("results", "property_map.png"), dpi = 500)
+```
+
+```{r}
+# reg_respondents <- mutate(reg_respondents, regular_pct = regular/53*100)
+
+# breaks <- c(0, 8, 16.5, 33, 49.5, 66)
+
+tm_shape(crime) +
+    tm_polygons(title = "Violent Crime Rates\nper 1,000 Estimated Residents", col = "vlnt_rt", 
+                style = "jenks", palette = "BuGn") +
+  tm_shape(roads) +
+    tm_lines(lwd = 1.5, col = "#474747") +
+  tm_shape(metro) +
+    tm_lines() +
+  tm_shape(campus) +
+    tm_borders(lwd = 2, col = "#000000") +
+  tm_shape(labels) +
+    tm_text("name", fontface = 2, just = "left", size = 1, shadow = TRUE) +
+  tm_shape(nhood) +
+    tm_text("name", fontface = 4, size = .75, shadow = TRUE) +
+  tm_shape(features) +
+    tm_text("name", fontface = 3, just = "bottom", size = .75, shadow = TRUE) +
+  tm_layout(frame = FALSE, outer.margins = c(0,0,0,0)) +
+  tm_scale_bar(position=c("right", "bottom"), just = "top") +
+  tm_legend(outside = TRUE, attr.outside = TRUE) -> violent_map
+
+tmap_save(tm = violent_map, filename = here("results", "violent_map.png"), dpi = 500)
+```
+
+
+```{r}
+st_geometry(freq_respondents) <- NULL
+st_geometry(reg_respondents) <- NULL
+```
+
+
+```{r}
+crime_freq <- left_join(crime, freq_respondents, by = "GRID_ID")
+
+ggplot(data = crime_freq, mapping = aes(prprty_, frequent)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+```
+
+```{r}
+ggplot(data = crime_freq, mapping = aes(vlnt_rt, frequent)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+```
+
+
+```{r}
+ggplot(data = crime_freq, mapping = aes(prt1_rt, frequent/100)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(
+    title = "Frequent Visits by % of Respondents",
+    x = "",
+    y = "% of Frequent Visits"
+  ) +
+  scale_y_continuous(labels = scales::percent, limits = c(0, .6)) -> a
+  
+```
+
+```{r}
+crime_reg <- left_join(crime, reg_respondents, by = "GRID_ID")
+
+ggplot(data = crime_reg, mapping = aes(prt1_rt, regular/100)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(
+    title = "Regular Visits by % of Respondents",
+    x = "Part 1 Crime Rate (per 1,000 estimated residents)",
+    y = "% of Regular Visits"
+  ) +
+  scale_y_continuous(labels = scales::percent, limits = c(0, .6)) -> b
+```
+
+```{r}
+c <- plot_grid(a, b, labels = c('A', 'B'), ncol = 1, align = "v")
+
+ggsave(filename = here("results", "rate_plots.png"), dpi = 500, units = "in", width = 8, height = 5 )
+```
+
