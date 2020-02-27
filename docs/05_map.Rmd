@@ -6,7 +6,7 @@ output: github_document
 ---
 
 ## Introduction
-This notebook imports the shapefiles created by `summarize.Rmd` and maps them.
+This notebook imports the shapefiles created by `02_summarize.Rmd` and `03_crime.Rmd`, and then maps them. Correlation calculations are also made at the end of the notebook.
 
 ## Dependencies
 This notebook requires the following packages:
@@ -23,6 +23,62 @@ library(ggplot2)
 # other packages
 library(cowplot)
 library(here)
+```
+
+We also a custom function we'll use:
+
+```{r corrTable}
+corrTable <-function(.data, coef = c("pearson", "spearman"), listwise = TRUE, round = 3, pStar = TRUE, ...){
+  
+  ## process dots
+  if (rlang::dots_n(...) > 1) {
+    .data <- dplyr::select(.data, ...)
+  }
+  
+  ## listwise deletion
+  if (listwise == TRUE) {
+    .data <- na.omit(.data)
+  }
+  
+  ## compute correlation matrix
+  inputMatrix <- as.matrix(.data)
+  corrMatrix <- Hmisc::rcorr(inputMatrix, type = coef)
+  
+  ## matrix of correlation coeficients
+  rCoef <- corrMatrix$r
+  
+  # matrix of p-values
+  pValues <- corrMatrix$P  
+  
+  ## round the correlation matrix values
+  rCoef <- format(round(cbind(rep(-1.11, ncol(.data)), rCoef), round))[,-1]
+  
+  ## statistical significance stars
+  if (pStar == TRUE) {
+    
+    ## Define notions for significance levels
+    stars <- ifelse(pValues < .001, "***", 
+                    ifelse(pValues < .01, "**", 
+                           ifelse(pValues < .05, "*", "")))
+    
+    ## add apropriate stars
+    rCoef <- matrix(paste(rCoef, stars, sep = ""), ncol = ncol(.data))    
+  }
+  
+  ## remove upper triangle
+  rCoef[upper.tri(rCoef, diag = FALSE)] <- ""
+  diag(rCoef) <- formatC(1, digits = round, format = "f")
+  
+  ## final formatting
+  rCoef <- as.data.frame(rCoef)
+  rCoef <- dplyr::mutate_if(rCoef, is.factor, as.character)
+  rownames(rCoef) <- colnames(.data)
+  colnames(rCoef) <- paste(colnames(.data), "", sep = "")
+
+  
+  ## return data frame
+  return(rCoef)
+} 
 ```
 
 ## Load Data
@@ -59,22 +115,37 @@ campus <- st_read(here("data", "spatial", "ZONE_CAMPUS_SLU"), stringsAsFactors =
 ```
 
 ## Geoprocessing Data
+There is some geoprocessing we need to do. First, we need to crop some our shapefiles that provide cartographic data. We'll create a study area object:
 
-```{r}
+```{r create-study-area}
 freq_clusters %>%
   mutate(id = 1) %>%
   group_by(id) %>%
   summarise(name = "study area") -> study_area
 ```
 
-```{r}
+We can use the `study_area` object to crop roads:
+
+```{r crop-roads}
 roads <- st_crop(roads, study_area) %>%
   filter(RTTYP == "I")
 ```
 
-```{r}
+And the metro lines:
+
+```{r crop-metro}
 metro <- st_crop(metro, study_area)
 ```
+
+We don't have a need for the `study_area` object after this:
+
+```{r clean-up-1}
+rm(study_area)
+```
+
+
+## Re-Project
+With our data processed, we'll re-project them to NAD 1983 so our map is not slightly tilted:
 
 ```{r}
 freq_clusters <- st_transform(freq_clusters, crs = 4269)
@@ -89,41 +160,54 @@ campus <- st_transform(campus, crs = 4269)
 metro <- st_transform(metro, crs = 4269)
 ```
 
-```{r}
+## Create Labels
+First, we'll create map labels for SLU's campus:
+
+```{r campus-labels}
+# define points
 labels <- tibble(
   name = c("North Campus", "South Campus"),
   x = c(-90.235964, -90.236005),
   y = c(38.639756, 38.620040)
 )
 
+# project points
 labels <- st_as_sf(labels, coords = c("x", "y"), crs = 4269)
 ```
 
-```{r}
+Next, for neighborhoods:
+
+```{r nhood-label}
+# define points
 nhood <- tibble(
   name = c("Central West End", "Grand Center", "Forest Park Southeast"),
   x = c(-90.255050, -90.232176, -90.256972),
   y = c(38.641675, 38.642287, 38.626802)
 )
 
+# project points
 nhood <- st_as_sf(nhood, coords = c("x", "y"), crs = 4269)
-
 ```
 
+Next, for interstate highways and the metro line:
+
 ```{r}
+# define points
 features <- tibble(
   name = c("I-44", "I-64", "Metro"),
   x = c(-90.268058, -90.268058, -90.265650),
   y = c(38.616898, 38.628251, 38.642927)
 )
 
+# project points
 features <- st_as_sf(features, coords = c("x", "y"), crs = 4269)
-
 ```
 
+## Frequent Clusters 
+### Map Counts of Clusters
 
-```{r}
-
+```{r freq-clusters-map}
+# create map object
 tm_shape(freq_clusters) +
     tm_polygons(title = "Count of Clusters", col = "frequent", style = "jenks") +
   tm_shape(roads) +
@@ -143,14 +227,21 @@ tm_shape(freq_clusters) +
   tm_scale_bar(position=c("right", "bottom"), just = "top") +
   tm_legend(outside = TRUE, attr.outside = TRUE) -> freq_clusters_map
 
+# save map
 tmap_save(tm = freq_clusters_map, filename = here("results", "freq_clusters_map.png"), dpi = 500)
+
+# remove map
+rm(freq_clusters_map)
 ```
 
-```{r}
-freq_respondents <- mutate(freq_respondents, frequent_pct = frequent/53*100)
+### Percent of Frequent Clusters
 
+```{r freq-pct-map}
+# prep data
+freq_respondents <- mutate(freq_respondents, frequent_pct = frequent/53*100)
 breaks <- c(0, 8, 16.5, 33, 66, 100)
 
+# create map object
 tm_shape(freq_respondents) +
     tm_polygons(title = "% of Respondents", col = "frequent_pct", 
                 breaks = breaks, palette = "Blues") +
@@ -171,14 +262,17 @@ tm_shape(freq_respondents) +
   tm_scale_bar(position=c("right", "bottom"), just = "top") +
   tm_legend(outside = TRUE, attr.outside = TRUE) -> freq_respondents_map
 
+# save map
 tmap_save(tm = freq_respondents_map, filename = here("results", "freq_respondents_map.png"), dpi = 500)
+
+# remove map
+rm(freq_respondents_map)
 ```
 
-```{r}
-freq_respondents <- mutate(freq_respondents, frequent_pct = frequent/53*100)
+### Publication Map
 
-breaks <- c(0, 8, 16.5, 33, 66, 100)
-
+```{r freq-pub-map}
+# create map object
 tm_shape(freq_respondents) +
     tm_polygons(title = "% of Respondents", col = "frequent_pct", 
                 breaks = breaks, palette = "Blues") +
@@ -198,11 +292,18 @@ tm_shape(freq_respondents) +
   tm_scale_bar(position=c("right", "bottom"), just = "top") +
   tm_legend(outside = TRUE, attr.outside = TRUE) -> freq_respondents_map
 
+# save map
 tmap_save(tm = freq_respondents_map, filename = here("results", "figure4.png"), dpi = 500)
+
+# remove map
+rm(freq_respondents_map)
 ```
 
-```{r}
+## Regular Clusters
+### Map Counts of Clusters
 
+```{r reg-cluster-map}
+# create map object
 tm_shape(reg_clusters) +
     tm_polygons(title = "Count of Clusters", col = "regular", 
                 style = "jenks", palette = "Reds") +
@@ -223,12 +324,18 @@ tm_shape(reg_clusters) +
   tm_scale_bar(position=c("right", "bottom"), just = "top") +
   tm_legend(outside = TRUE, attr.outside = TRUE) -> reg_clusters_map
 
+# save map
 tmap_save(tm = reg_clusters_map, filename = here("results", "reg_clusters_map.png"), dpi = 500)
+
+# remove map
+rm(reg_clusters_map)
 ```
 
-```{r}
-reg_respondents <- mutate(reg_respondents, regular_pct = regular/53*100)
+### Percent of Regular Clusters
 
+```{r reg-pct-map}
+# prep data
+reg_respondents <- mutate(reg_respondents, regular_pct = regular/53*100)
 breaks <- c(0, 8, 16.5, 33, 49.5, 66)
 
 tm_shape(reg_respondents) +
@@ -251,14 +358,17 @@ tm_shape(reg_respondents) +
   tm_scale_bar(position=c("right", "bottom"), just = "top") +
   tm_legend(outside = TRUE, attr.outside = TRUE) -> reg_respondents_map
 
+# save map
 tmap_save(tm = reg_respondents_map, filename = here("results", "reg_respondents_map.png"), dpi = 500)
+
+# remove map
+rm(reg_respondents_map)
 ```
 
-```{r}
-reg_respondents <- mutate(reg_respondents, regular_pct = regular/53*100)
+### Publication Map
 
-breaks <- c(0, 8, 16.5, 33, 49.5, 66)
-
+```{r reg-pub-map}
+# create map object
 tm_shape(reg_respondents) +
     tm_polygons(title = "% of Respondents", col = "regular_pct", 
                 breaks = breaks, palette = "Greens") +
@@ -278,14 +388,18 @@ tm_shape(reg_respondents) +
   tm_scale_bar(position=c("right", "bottom"), just = "top") +
   tm_legend(outside = TRUE, attr.outside = TRUE) -> reg_respondents_map
 
+# save map
 tmap_save(tm = reg_respondents_map, filename = here("results", "figure5.png"), dpi = 500)
+
+# remove map
+rm(reg_respondents_map)
 ```
 
-```{r}
-# reg_respondents <- mutate(reg_respondents, regular_pct = regular/53*100)
+## Crime Maps
+### Property Crime Map
 
-# breaks <- c(0, 8, 16.5, 33, 49.5, 66)
-
+```{r property-crime-map}
+# create map object
 tm_shape(crime) +
     tm_polygons(title = "Property Crime Rates\nper 1,000 Estimated Residents", col = "prprty_", 
                 style = "jenks", palette = "BuGn") +
@@ -305,14 +419,17 @@ tm_shape(crime) +
   tm_scale_bar(position=c("right", "bottom"), just = "top") +
   tm_legend(outside = TRUE, attr.outside = TRUE) -> property_map
 
+# save map
 tmap_save(tm = property_map, filename = here("results", "property_map.png"), dpi = 500)
+
+# remove map
+rm(property_map)
 ```
 
-```{r}
-# reg_respondents <- mutate(reg_respondents, regular_pct = regular/53*100)
+### Violent Crime Map
 
-# breaks <- c(0, 8, 16.5, 33, 49.5, 66)
-
+```{r violent-crime-map}
+# create map object
 tm_shape(crime) +
     tm_polygons(title = "Violent Crime Rates\nper 1,000 Estimated Residents", col = "vlnt_rt", 
                 style = "jenks", palette = "BuGn") +
@@ -332,61 +449,108 @@ tm_shape(crime) +
   tm_scale_bar(position=c("right", "bottom"), just = "top") +
   tm_legend(outside = TRUE, attr.outside = TRUE) -> violent_map
 
+# save map
 tmap_save(tm = violent_map, filename = here("results", "violent_map.png"), dpi = 500)
+
+# remove map
+rm(violent_map)
 ```
 
+### Clean-up Map Objects
+We can now get rid of several cartographic data objects:
 
-```{r}
+```{r clean-up-2}
+rm(campus, features, freq_clusters, labels, metro, nhood, reg_clusters, roads, breaks)
+```
+
+## Crime Analysis
+We'll also caluclate correlation statistics comparing the respondent data to crime rates. 
+
+### Prepare Data
+First, we need to convert them back to data frames from `sf` objects:
+
+```{r convert-to-df}
 st_geometry(freq_respondents) <- NULL
 st_geometry(reg_respondents) <- NULL
+st_geometry(crime) <- NULL
 ```
 
+Then, we'll join our data together:
 
-```{r}
+```{r join-data}
+# joins
 crime_freq <- left_join(crime, freq_respondents, by = "GRID_ID")
+crime_reg <- left_join(crime, reg_respondents, by = "GRID_ID")
 
-ggplot(data = crime_freq, mapping = aes(prprty_, frequent)) +
-  geom_point() +
-  geom_smooth(method = "lm")
+# clean-up
+rm(crime, freq_respondents, reg_respondents)
 ```
 
-```{r}
-ggplot(data = crime_freq, mapping = aes(vlnt_rt, frequent)) +
-  geom_point() +
-  geom_smooth(method = "lm")
-```
+### Plot Data
+First, we'll plot the frequent data as a scatterplot with Part 1 crime rates:
 
-
-```{r}
-ggplot(data = crime_freq, mapping = aes(prt1_rt, frequent/100)) +
+```{r frequent-part1-plot}
+ggplot(data = crime_freq, mapping = aes(prt1_rt, frequent_pct/100)) +
   geom_point() +
   geom_smooth(method = "lm") +
   labs(
-    title = "Frequent Visits by % of Respondents",
+    title = "% of Respondents with Frequent Visits",
     x = "",
     y = "% of Frequent Visits"
   ) +
-  scale_y_continuous(labels = scales::percent, limits = c(0, .6)) -> a
-  
+  scale_y_continuous(labels = scales::percent) -> a
 ```
 
-```{r}
-crime_reg <- left_join(crime, reg_respondents, by = "GRID_ID")
+We'll make the same plot, but for the regular data:
 
-ggplot(data = crime_reg, mapping = aes(prt1_rt, regular/100)) +
+```{r regular-part1-plot}
+
+
+ggplot(data = crime_reg, mapping = aes(prt1_rt, regular_pct/100)) +
   geom_point() +
   geom_smooth(method = "lm") +
   labs(
-    title = "Regular Visits by % of Respondents",
+    title = "% of Respondents with Regular Visits",
     x = "Part 1 Crime Rate (per 1,000 estimated residents)",
     y = "% of Regular Visits"
   ) +
-  scale_y_continuous(labels = scales::percent, limits = c(0, .6)) -> b
+  scale_y_continuous(labels = scales::percent, limits = c(0, 1)) -> b
 ```
 
-```{r}
+Then, we'll stitch both together using the `cowplot` package:
+
+```{r plot-output}
+# create plot grid
 c <- plot_grid(a, b, labels = c('A', 'B'), ncol = 1, align = "v")
 
-ggsave(filename = here("results", "rate_plots.png"), dpi = 500, units = "in", width = 8, height = 5 )
+# save plot
+ggsave(filename = here("results", "rate_plots.png"), dpi = 500, units = "in", width = 8, height = 8 )
+
+# clean-up
+rm(a, b, c)
+```
+
+## Correlations
+Finally, we'll calculate correlation coefficients and p-values. First, the frequent data:
+
+```{r corr-freq}
+crime_freq %>%
+  select(prt1_rt, frequent_pct) %>%
+  corrTable(coef = "pearson")
+```
+
+And finally, the regular data:
+
+```{r corr-reg}
+crime_reg %>%
+  select(prt1_rt, regular_pct) %>%
+  corrTable(coef = "pearson")
+```
+
+## Clean-up
+We can now remove all objects:
+
+```{r clean-up-3}
+rm(corrTable, crime_freq, crime_reg)
 ```
 

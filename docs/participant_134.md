@@ -1,7 +1,7 @@
 Participant 134
 ================
 Christopher Prener, Ph.D.
-(January 30, 2020)
+(February 27, 2020)
 
 ## Introduction
 
@@ -39,7 +39,7 @@ grids <- st_read(here("data", "grid"), stringsAsFactors = FALSE)
     ## geometry type:  POLYGON
     ## dimension:      XY
     ## bbox:           xmin: 883794.9 ymin: 1011334 xmax: 902199.3 ymax: 1025649
-    ## epsg (SRID):    NA
+    ## epsg (SRID):    102696
     ## proj4string:    +proj=tmerc +lat_0=35.83333333333334 +lon_0=-90.5 +k=0.9999333333333333 +x_0=250000 +y_0=0 +datum=NAD83 +units=us-ft +no_defs
 
 ## Define and Validate Participant Clusters

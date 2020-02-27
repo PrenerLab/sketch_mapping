@@ -53,10 +53,9 @@ grids %>%
 
 Finally, we'll re-project the grid squares:
 
-```{r}
+```{r re-project-grids}
 grids <- st_transform(grids, crs = 26915)
 ```
-
 
 ### Crime Data
 To create our crime data set, we'll download all 2020, 2019, and 2018 crimes and then validate them. First, we need to create an index and then download the raw data:
@@ -119,7 +118,7 @@ cs_combine(type = "year", date = 2018, data2020_raw, data2019_raw, data2018_raw)
 
 With our initial objects created, we'll quickly clean-up our global enviornment:
 
-```{r}
+```{r clean-up-1}
 rm(data2019_raw, data2018_raw, data2020_raw, i)
 ```
 
@@ -145,21 +144,22 @@ crime <- bind_rows(part1_2018, part1_2019)
 
 At this stage, we can remove all of the underlying data used to create the `crime` object:
 
-```{r}
+```{r clean-up-2}
 rm(part1_2018, part1_2019, crime2018, crime2019)
 ```
 
 We'll also remove quite a few columns that are no longer needed in `crime`:
 
-```{r}
+```{r subset-crime-cols}
 crime <- select(crime, -coded_month, -flag_crime, -flag_unfounded, -flag_administrative,
                      -count, -flag_cleanup, -district, -location_name, -location_comment,
                      -cad_address, -cad_street, -dateTime, -date, -time, -cs_year)
 ```
 
-### City Boundary
+## City Boundary
+We'll also create a `sf` object  
 
-```{r}
+```{r download-city-boundary}
 stl <- counties(state = 29, class = "sf") %>%
   st_transform(crs = 26915) %>%
   filter(COUNTYFP == 510) %>%
@@ -167,11 +167,10 @@ stl <- counties(state = 29, class = "sf") %>%
   select(STL)
 ```
 
-
 ## Improve Sample Size
 There is a small degree of missing spatial data in these data:
 
-```{r}
+```{r identify-missing}
 ### identify missing
 crime %>% 
   cs_missingXY(varX = x_coord, varY = y_coord, newVar = missingXY) %>%
@@ -189,8 +188,7 @@ count_miss_crime <- sum(crime$missingXY, na.rm = TRUE)
 
 In order to address these missing data, we'll parse the addresses for those that are missing and attempt to geocode them. First, we need to build a set of local geocoders:
 
-```{r}
-## build geocoders
+```{r build-geocoders}
 geocoder <- gw_build_geocoder(style = "full", return = "coords")
 geocoder_s <- gw_build_geocoder(style = "short", return = "coords")
 geocoder_p <- gw_build_geocoder(style = "placename", return = "coords")
@@ -198,7 +196,7 @@ geocoder_p <- gw_build_geocoder(style = "placename", return = "coords")
 
 Then, we need to parse and geocode the data:
 
-```{r}
+```{r geocode}
 ### subset missing
 crime %>% 
   filter(missingXY == TRUE) %>%
@@ -256,7 +254,7 @@ expect_equal(nrow(crime), count_crime)
 
 With our geocoding complete, we'll identify still missing spatial data:
 
-```{r}
+```{r re-identify-missing}
 # identify missing
 crime %>% 
   cs_missingXY(varX = x, varY = y, newVar = missingXY) %>%
@@ -271,7 +269,7 @@ count_miss2_crime <- sum(crime$missingXY, na.rm = TRUE)
 
 We've improved from 2.2% missing to .66% missing. Next, we'll remove those crimes that occured outside of the city:
 
-```{r}
+```{r geoprocess}
 ### project
 crime %>%
   filter(missingXY == FALSE) %>%
@@ -296,14 +294,14 @@ count_city <- nrow(crime)
 
 With a final data set of crimes for this time period constructed, we'll clean-up our enviornment again:
 
-```{r}
+```{r clean-up-3}
 rm(geocoder, geocoder_p, geocoder_s, stl, crime_miss, crime_miss_attmpt, crime_miss_unknwn)
 ```
 
 ## Count Crimes in Grid Squares
 Next, we want to join crimes to grid squares and create a count of crimes per grid square. We'll create three counts, one for all Part 1 crimes, one for violent crimes, and one for property crimes:
 
-```{r}
+```{r spatial-join}
 ## join
 crime %>%
   st_intersection(., grids) %>%
@@ -346,13 +344,15 @@ left_join(grids, crime_grid_p1, by = "GRID_ID") %>%
 
 Finally, we can clean-up our enviornment again:
 
-```{r}
+```{r clean-4}
 rm(crime, crime_grid_p1, crime_grid_property, crime_grid_violent)
 ```
 
 ## Store Record of How Data Evolved
+To trace the changes in the larger sample of crime data, we'll write our counts to `missing_crime` and then save them in our `data/crime` directory:
 
-```{r}
+```{r store-missing}
+# create crime object
 missing_crime <- tibble(
   orig = count_crime,
   miss_pre = count_miss_crime,
@@ -363,20 +363,18 @@ missing_crime <- tibble(
   grid_v = sum(crime_grid$violent, na.rm = TRUE),
   grid_p = sum(crime_grid$property, na.rm = TRUE)
 )
-```
 
-```{r}
+# write data
 write_csv(missing_crime, path = here("data", "crime", "missing_crime.csv"))
-```
 
-
-```{r}
+# clean-up enviornment
 rm(count_crime, count_miss_crime, count_miss2_crime, count_pre_city, count_city, count_grid)
 ```
 
 ## Calculate Crime Rates
+With our data geocoded, we can then calculate crime rates. We'll need tract level data for St. Louis to do this:
 
-```{r}
+```{r download-tracts}
 ## download tract data
 pop <- get_acs(year = 2018, geography = "tract", variables = "B01003_001", 
                state = 29, county = 510, geometry = TRUE) %>%
@@ -385,12 +383,16 @@ pop <- get_acs(year = 2018, geography = "tract", variables = "B01003_001",
   rename(total_pop = estimate)
 ```
 
-```{r}
+With the tract level population estimates, we can interpoalte them to grid squares using the `areal` package:
+
+```{r interpolate}
 grids <- aw_interpolate(grids, tid = GRID_ID, source = pop, sid = GEOID, 
                         weight = "total", output = "tibble", extensive = "total_pop")
 ```
 
-```{r}
+Once they are interpoalted, we can calculate rates per 1,000 estimated residents:
+
+```{r calculate-rates}
 crime_grid %>%
   left_join(., grids, by = "GRID_ID") %>%
   mutate(
@@ -401,12 +403,12 @@ crime_grid %>%
   select(GRID_ID, total_pop, part1, part1_rate, violent, violent_rate, property, property_rate) -> crime_grid
 ```
 
-```{r}
+These data can then be written to `data/crime`:
+
+```{r write}
+# write data
 st_write(crime_grid, dsn = here("data", "crime", "crime_grid", "crime_grid.shp"), delete_dsn = TRUE)
-```
 
-
-```{r}
+# clean-up
 rm(grids, pop)
 ```
-

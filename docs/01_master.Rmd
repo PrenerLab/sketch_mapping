@@ -1,12 +1,12 @@
 ---
-title: "Master Notebook"
+title: "Master Notebook for Digitization"
 author: "Christopher Prener, Ph.D."
 date: '(`r format(Sys.time(), "%B %d, %Y")`)'
 output: github_document
 ---
 
 ## Introduction
-This notebook executes all of the participant-level digitization notebooks.
+This notebook executes all of the participant-level digitization notebooks. Maps with all of the raw data can be found on the project's [Open Science Framework repository](<REDACTED FOR PEER REIVEW>).
 
 ## Dependencies
 This notebook requires the following packages:
@@ -24,22 +24,31 @@ library(here)
 All of the files contained in `docs/` can be listed and saved in a vector:
 
 ```{r identify-files}
+# create vector of all files
 files <- dir(path = here("docs"), pattern = "*.Rmd")
-```
 
-
-## Knit Participant Documents
-
-```{r render-participants}
 # isolate participant files
 participant_files <- grep("^participant", files, value = TRUE)
+```
 
+## Knit Participant Documents
+With the list of participant files created, we can iterate over them and knit each one:
+
+```{r render-participants}
 # render
 participant_files %>%
   map(~render(input = here("docs", .x), output_format = "github_document"))
 ```
 
-```{bash}
+The `.html` output is not needed, and so we'll remove it from the `docs/` folder:
+
+```{bash clean-docs}
 rm *.html
+```
+
+And clean-up our global enviornment:
+
+```{r clean-up-enviornment}
+rm(files, participant_files)
 ```
 

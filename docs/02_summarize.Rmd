@@ -49,13 +49,12 @@ grids <- st_read(here("data", "grid"), stringsAsFactors = FALSE)
 ## Modify Grid
 Not all grid squares were shown on the instrument, so we'll remove some of the outer grid squares:
 
-```{r}
+```{r modify-grid}
 grids %>% 
   separate(GRID_ID, into = c("col", "row"), sep = "-", remove = FALSE) %>%
   filter(col != "A") %>%
   filter(col != "I") -> grids
 ```
-
 
 ## Verify
 Next, we can use the `qualmap` function `qm_verify()` to ensure we have data that are appropriate for summarization:

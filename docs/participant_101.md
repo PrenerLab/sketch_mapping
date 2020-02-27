@@ -1,7 +1,7 @@
 Participant 101
 ================
 Christopher Prener, Ph.D.
-(January 30, 2020)
+(February 27, 2020)
 
 ## Introduction
 
@@ -15,8 +15,23 @@ This notebook requires the following packages:
 ``` r
 # spatial packages
 library(qualmap)
-library(sf)
+```
 
+    ## Registered S3 method overwritten by 'dplyr':
+    ##   method           from
+    ##   print.rowwise_df
+
+    ## Registered S3 method overwritten by 'htmlwidgets':
+    ##   method           from         
+    ##   print.htmlwidget tools:rstudio
+
+``` r
+library(sf)
+```
+
+    ## Linking to GEOS 3.7.2, GDAL 2.4.2, PROJ 5.2.0
+
+``` r
 # tidyverse packages
 library(readr)
 
@@ -24,6 +39,13 @@ library(readr)
 library(here)
 library(testthat)
 ```
+
+    ## 
+    ## Attaching package: 'testthat'
+
+    ## The following object is masked from 'package:purrr':
+    ## 
+    ##     is_null
 
 ## Load Reference Data
 
@@ -39,7 +61,7 @@ grids <- st_read(here("data", "grid"), stringsAsFactors = FALSE)
     ## geometry type:  POLYGON
     ## dimension:      XY
     ## bbox:           xmin: 883794.9 ymin: 1011334 xmax: 902199.3 ymax: 1025649
-    ## epsg (SRID):    NA
+    ## epsg (SRID):    102696
     ## proj4string:    +proj=tmerc +lat_0=35.83333333333334 +lon_0=-90.5 +k=0.9999333333333333 +x_0=250000 +y_0=0 +datum=NAD83 +units=us-ft +no_defs
 
 ## Define and Validate Participant Clusters

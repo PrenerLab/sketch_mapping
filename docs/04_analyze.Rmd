@@ -1,0 +1,95 @@
+---
+title: "Analyze Clusters"
+author: "Christopher Prener, Ph.D."
+date: '(`r format(Sys.time(), "%B %d, %Y")`)'
+output: github_document
+---
+
+## Introduction
+This notebook calculates Moran's $I$ statistics for both the frequent and regular data.
+
+## Dependencies
+This notebook requires the following packages:
+
+```{r load-packages}
+# tidyverse packages
+library(dplyr)
+
+# spatial packages
+library(spdep)
+library(sf)
+
+# other packages
+library(here)
+```
+
+## Load and Prepare Data
+We'll load our data and papre it by converting it to an `sp` object. First, the frequent data:
+
+```{r prep-frequent}
+freq_respondents <- st_read(here("data", "summaries", "freq_respondents"), stringsAsFactors = FALSE) %>%
+  st_transform(crs = 26915)
+
+freq_respondents <- mutate(freq_respondents, frequent_pct = frequent/53*100)
+
+freq_respondents <- as(freq_respondents, Class = "Spatial")
+```
+
+Then the regular data:
+
+```{r prep-regular}
+reg_respondents <- st_read(here("data", "summaries", "reg_respondents"), stringsAsFactors = FALSE) %>%
+  st_transform(crs = 26915)
+
+reg_respondents <- mutate(reg_respondents, regular_pct = regular/53*100)
+
+reg_respondents <- as(reg_respondents, Class = "Spatial")
+```
+
+## Analyze Frequent Data
+We need to create a spatial weights object (using rook) for our data:
+
+```{r freq-weights}
+nb <- poly2nb(freq_respondents, queen=FALSE)
+lw <- nb2listw(nb, style="W", zero.policy=TRUE)
+```
+
+With a weights object created, we can run a Moran's I test:
+
+```{r freq-moran}
+moran.test(freq_respondents$frequent_pct,lw)
+```
+
+And then finally use a monte carlo simulation to estimate the $p$ value for our test:
+
+```{r freq-sim}
+moran.mc(freq_respondents$frequent_pct, lw, nsim=999)
+```
+
+## Analyze Regular Data
+We need to create a spatial weights object (using rook) for our data:
+
+```{r reg-weights}
+nb <- poly2nb(reg_respondents, queen=FALSE)
+lw <- nb2listw(nb, style="W", zero.policy=TRUE)
+```
+
+With a weights object created, we can run a Moran's I test:
+
+```{r reg-moran}
+moran.test(reg_respondents$regular_pct,lw)
+```
+
+And then finally use a monte carlo simulation to estimate the $p$ value for our test:
+
+```{r reg-sim}
+moran.mc(reg_respondents$regular_pct, lw, nsim=999)
+```
+
+## Clean-up Enviornment
+Finally, we'll clean-up our enviornment:
+
+```{r clean-up}
+rm(freq_respondents, reg_respondents, lw, nb)
+```
+

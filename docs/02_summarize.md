@@ -1,7 +1,7 @@
 Summarize Clusters
 ================
 Christopher Prener, Ph.D.
-(February 06, 2020)
+(February 27, 2020)
 
 ## Introduction
 
