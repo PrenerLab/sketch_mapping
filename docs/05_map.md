@@ -1,7 +1,7 @@
 Map Clusters
 ================
 Christopher Prener, Ph.D.
-(February 27, 2020)
+(November 01, 2021)
 
 ## Introduction
 
@@ -18,7 +18,7 @@ This notebook requires the following packages:
 library(sf)
 ```
 
-    ## Linking to GEOS 3.7.2, GDAL 2.4.2, PROJ 5.2.0
+    ## Linking to GEOS 3.8.1, GDAL 3.2.1, PROJ 7.2.1
 
 ``` r
 library(tmap)
@@ -43,28 +43,12 @@ library(ggplot2)
 
 # other packages
 library(cowplot)
-```
-
-    ## 
-    ## ********************************************************
-
-    ## Note: As of version 1.0.0, cowplot does not change the
-
-    ##   default ggplot2 theme anymore. To recover the previous
-
-    ##   behavior, execute:
-    ##   theme_set(theme_cowplot())
-
-    ## ********************************************************
-
-``` r
 library(here)
 ```
 
     ## here() starts at /Users/prenercg/GitHub/PrenerLab/sketch_mapping
 
-We also a custom function we’ll
-use:
+We also a custom function we’ll use:
 
 ``` r
 corrTable <-function(.data, coef = c("pearson", "spearman"), listwise = TRUE, round = 3, pStar = TRUE, ...){
@@ -122,115 +106,121 @@ corrTable <-function(.data, coef = c("pearson", "spearman"), listwise = TRUE, ro
 
 ## Load Data
 
-The following shapefiles with participant data are
-needed:
+The following shapefiles with participant data are needed:
 
 ``` r
 freq_clusters <- st_read(here("data", "summaries", "freq_clusters"), stringsAsFactors = FALSE) %>%
   st_transform(crs = 26915)
 ```
 
-    ## Reading layer `freq_clusters' from data source `/Users/prenercg/GitHub/PrenerLab/sketch_mapping/data/summaries/freq_clusters' using driver `ESRI Shapefile'
+    ## Reading layer `freq_clusters' from data source 
+    ##   `/Users/prenercg/GitHub/PrenerLab/sketch_mapping/data/summaries/freq_clusters' 
+    ##   using driver `ESRI Shapefile'
     ## Simple feature collection with 49 features and 5 fields
-    ## geometry type:  POLYGON
-    ## dimension:      XY
-    ## bbox:           xmin: 885839.8 ymin: 1011334 xmax: 900154.4 ymax: 1025649
-    ## epsg (SRID):    NA
-    ## proj4string:    +proj=tmerc +lat_0=35.83333333333334 +lon_0=-90.5 +k=0.9999333333333333 +x_0=250000 +y_0=0 +datum=NAD83 +units=us-ft +no_defs
+    ## Geometry type: POLYGON
+    ## Dimension:     XY
+    ## Bounding box:  xmin: 885839.8 ymin: 1011334 xmax: 900154.4 ymax: 1025649
+    ## Projected CRS: Transverse_Mercator
 
 ``` r
 freq_respondents <- st_read(here("data", "summaries", "freq_respondents"), stringsAsFactors = FALSE) %>%
   st_transform(crs = 26915)
 ```
 
-    ## Reading layer `freq_respondents' from data source `/Users/prenercg/GitHub/PrenerLab/sketch_mapping/data/summaries/freq_respondents' using driver `ESRI Shapefile'
+    ## Reading layer `freq_respondents' from data source 
+    ##   `/Users/prenercg/GitHub/PrenerLab/sketch_mapping/data/summaries/freq_respondents' 
+    ##   using driver `ESRI Shapefile'
     ## Simple feature collection with 49 features and 5 fields
-    ## geometry type:  POLYGON
-    ## dimension:      XY
-    ## bbox:           xmin: 885839.8 ymin: 1011334 xmax: 900154.4 ymax: 1025649
-    ## epsg (SRID):    NA
-    ## proj4string:    +proj=tmerc +lat_0=35.83333333333334 +lon_0=-90.5 +k=0.9999333333333333 +x_0=250000 +y_0=0 +datum=NAD83 +units=us-ft +no_defs
+    ## Geometry type: POLYGON
+    ## Dimension:     XY
+    ## Bounding box:  xmin: 885839.8 ymin: 1011334 xmax: 900154.4 ymax: 1025649
+    ## Projected CRS: Transverse_Mercator
 
 ``` r
 reg_clusters <- st_read(here("data", "summaries", "reg_clusters"), stringsAsFactors = FALSE) %>%
   st_transform(crs = 26915)
 ```
 
-    ## Reading layer `reg_clusters' from data source `/Users/prenercg/GitHub/PrenerLab/sketch_mapping/data/summaries/reg_clusters' using driver `ESRI Shapefile'
+    ## Reading layer `reg_clusters' from data source 
+    ##   `/Users/prenercg/GitHub/PrenerLab/sketch_mapping/data/summaries/reg_clusters' 
+    ##   using driver `ESRI Shapefile'
     ## Simple feature collection with 49 features and 5 fields
-    ## geometry type:  POLYGON
-    ## dimension:      XY
-    ## bbox:           xmin: 885839.8 ymin: 1011334 xmax: 900154.4 ymax: 1025649
-    ## epsg (SRID):    NA
-    ## proj4string:    +proj=tmerc +lat_0=35.83333333333334 +lon_0=-90.5 +k=0.9999333333333333 +x_0=250000 +y_0=0 +datum=NAD83 +units=us-ft +no_defs
+    ## Geometry type: POLYGON
+    ## Dimension:     XY
+    ## Bounding box:  xmin: 885839.8 ymin: 1011334 xmax: 900154.4 ymax: 1025649
+    ## Projected CRS: Transverse_Mercator
 
 ``` r
 reg_respondents <- st_read(here("data", "summaries", "reg_respondents"), stringsAsFactors = FALSE) %>%
   st_transform(crs = 26915)
 ```
 
-    ## Reading layer `reg_respondents' from data source `/Users/prenercg/GitHub/PrenerLab/sketch_mapping/data/summaries/reg_respondents' using driver `ESRI Shapefile'
+    ## Reading layer `reg_respondents' from data source 
+    ##   `/Users/prenercg/GitHub/PrenerLab/sketch_mapping/data/summaries/reg_respondents' 
+    ##   using driver `ESRI Shapefile'
     ## Simple feature collection with 49 features and 5 fields
-    ## geometry type:  POLYGON
-    ## dimension:      XY
-    ## bbox:           xmin: 885839.8 ymin: 1011334 xmax: 900154.4 ymax: 1025649
-    ## epsg (SRID):    NA
-    ## proj4string:    +proj=tmerc +lat_0=35.83333333333334 +lon_0=-90.5 +k=0.9999333333333333 +x_0=250000 +y_0=0 +datum=NAD83 +units=us-ft +no_defs
+    ## Geometry type: POLYGON
+    ## Dimension:     XY
+    ## Bounding box:  xmin: 885839.8 ymin: 1011334 xmax: 900154.4 ymax: 1025649
+    ## Projected CRS: Transverse_Mercator
 
 ``` r
 crime <- st_read(here("data", "crime", "crime_grid"), stringsAsFactors = FALSE) %>%
   st_transform(crs = 26915)
 ```
 
-    ## Reading layer `crime_grid' from data source `/Users/prenercg/GitHub/PrenerLab/sketch_mapping/data/crime/crime_grid' using driver `ESRI Shapefile'
+    ## Reading layer `crime_grid' from data source 
+    ##   `/Users/prenercg/GitHub/PrenerLab/sketch_mapping/data/crime/crime_grid' 
+    ##   using driver `ESRI Shapefile'
     ## Simple feature collection with 49 features and 8 fields
-    ## geometry type:  POLYGON
-    ## dimension:      XY
-    ## bbox:           xmin: 737559.2 ymin: 4277125 xmax: 742041.3 ymax: 4281607
-    ## epsg (SRID):    NA
-    ## proj4string:    +proj=utm +zone=15 +ellps=GRS80 +units=m +no_defs
+    ## Geometry type: POLYGON
+    ## Dimension:     XY
+    ## Bounding box:  xmin: 737559.2 ymin: 4277125 xmax: 742041.3 ymax: 4281607
+    ## Projected CRS: UTM_Zone_15_Northern_Hemisphere
 
-These additional shapefiles are also used for
-mapping:
+These additional shapefiles are also used for mapping:
 
 ``` r
 metro <- st_read(here("data", "spatial", "STL_TRANS_Metrolink"), stringsAsFactors = FALSE) %>%
   st_transform(crs = 26915)
 ```
 
-    ## Reading layer `STL_TRANS_Metrolink' from data source `/Users/prenercg/GitHub/PrenerLab/sketch_mapping/data/spatial/STL_TRANS_Metrolink' using driver `ESRI Shapefile'
+    ## Reading layer `STL_TRANS_Metrolink' from data source 
+    ##   `/Users/prenercg/GitHub/PrenerLab/sketch_mapping/data/spatial/STL_TRANS_Metrolink' 
+    ##   using driver `ESRI Shapefile'
     ## Simple feature collection with 1 feature and 6 fields
-    ## geometry type:  MULTILINESTRING
-    ## dimension:      XY
-    ## bbox:           xmin: -90.31973 ymin: 38.5928 xmax: -90.17888 ymax: 38.66169
-    ## epsg (SRID):    4326
-    ## proj4string:    +proj=longlat +datum=WGS84 +no_defs
+    ## Geometry type: MULTILINESTRING
+    ## Dimension:     XY
+    ## Bounding box:  xmin: -90.31973 ymin: 38.5928 xmax: -90.17888 ymax: 38.66169
+    ## Geodetic CRS:  WGS 84
 
 ``` r
 roads <- st_read(here("data", "spatial", "STL_TRANS_PrimaryRoads"), stringsAsFactors = FALSE) %>%
   st_transform(crs = 26915)
 ```
 
-    ## Reading layer `STL_TRANS_PrimaryRoads' from data source `/Users/prenercg/GitHub/PrenerLab/sketch_mapping/data/spatial/STL_TRANS_PrimaryRoads' using driver `ESRI Shapefile'
+    ## Reading layer `STL_TRANS_PrimaryRoads' from data source 
+    ##   `/Users/prenercg/GitHub/PrenerLab/sketch_mapping/data/spatial/STL_TRANS_PrimaryRoads' 
+    ##   using driver `ESRI Shapefile'
     ## Simple feature collection with 89 features and 5 fields
-    ## geometry type:  LINESTRING
-    ## dimension:      XY
-    ## bbox:           xmin: -90.31897 ymin: 38.53756 xmax: -90.17253 ymax: 38.76759
-    ## epsg (SRID):    4269
-    ## proj4string:    +proj=longlat +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +no_defs
+    ## Geometry type: LINESTRING
+    ## Dimension:     XY
+    ## Bounding box:  xmin: -90.31897 ymin: 38.53756 xmax: -90.17253 ymax: 38.76759
+    ## Geodetic CRS:  NAD83
 
 ``` r
 campus <- st_read(here("data", "spatial", "ZONE_CAMPUS_SLU"), stringsAsFactors = FALSE) %>%
   st_transform(crs = 26915)
 ```
 
-    ## Reading layer `ZONE_CAMPUS_SLU' from data source `/Users/prenercg/GitHub/PrenerLab/sketch_mapping/data/spatial/ZONE_CAMPUS_SLU' using driver `ESRI Shapefile'
+    ## Reading layer `ZONE_CAMPUS_SLU' from data source 
+    ##   `/Users/prenercg/GitHub/PrenerLab/sketch_mapping/data/spatial/ZONE_CAMPUS_SLU' 
+    ##   using driver `ESRI Shapefile'
     ## Simple feature collection with 4 features and 2 fields
-    ## geometry type:  POLYGON
-    ## dimension:      XY
-    ## bbox:           xmin: -10045680 ymin: 4666920 xmax: -10043860 ymax: 4670081
-    ## epsg (SRID):    3857
-    ## proj4string:    +proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs
+    ## Geometry type: POLYGON
+    ## Dimension:     XY
+    ## Bounding box:  xmin: -10045680 ymin: 4666920 xmax: -10043860 ymax: 4670081
+    ## Projected CRS: WGS 84 / Pseudo-Mercator
 
 ## Geoprocessing Data
 
@@ -255,8 +245,7 @@ roads <- st_crop(roads, study_area) %>%
     ## Warning: attribute variables are assumed to be spatially constant throughout all
     ## geometries
 
-And the metro
-    lines:
+And the metro lines:
 
 ``` r
 metro <- st_crop(metro, study_area)
@@ -440,14 +429,12 @@ tm_shape(freq_respondents) +
   tm_legend(outside = TRUE, attr.outside = TRUE) -> freq_respondents_map
 
 # save map
-tmap_save(tm = freq_respondents_map, filename = here("results", "figure4.png"), dpi = 500)
+tmap_save(tm = freq_respondents_map, filename = here("results", "figure3.pdf"), dpi = 600)
 ```
 
-    ## Map saved to /Users/prenercg/GitHub/PrenerLab/sketch_mapping/results/figure4.png
+    ## Map saved to /Users/prenercg/GitHub/PrenerLab/sketch_mapping/results/figure3.pdf
 
-    ## Resolution: 3492.825 by 3507.19 pixels
-
-    ## Size: 6.98565 by 7.014379 inches (500 dpi)
+    ## Size: 6.972222 by 7.013889 inches
 
 ``` r
 # remove map
@@ -561,14 +548,12 @@ tm_shape(reg_respondents) +
   tm_legend(outside = TRUE, attr.outside = TRUE) -> reg_respondents_map
 
 # save map
-tmap_save(tm = reg_respondents_map, filename = here("results", "figure5.png"), dpi = 500)
+tmap_save(tm = reg_respondents_map, filename = here("results", "figure4.pdf"), dpi = 600)
 ```
 
-    ## Map saved to /Users/prenercg/GitHub/PrenerLab/sketch_mapping/results/figure5.png
+    ## Map saved to /Users/prenercg/GitHub/PrenerLab/sketch_mapping/results/figure4.pdf
 
-    ## Resolution: 3492.825 by 3507.19 pixels
-
-    ## Size: 6.98565 by 7.014379 inches (500 dpi)
+    ## Size: 6.972222 by 7.013889 inches
 
 ``` r
 # remove map
@@ -655,8 +640,7 @@ rm(violent_map)
 
 ### Clean-up Map Objects
 
-We can now get rid of several cartographic data
-objects:
+We can now get rid of several cartographic data objects:
 
 ``` r
 rm(campus, features, freq_clusters, labels, metro, nhood, reg_clusters, roads, breaks)
@@ -698,11 +682,12 @@ ggplot(data = crime_freq, mapping = aes(prt1_rt, frequent_pct/100)) +
   geom_point() +
   geom_smooth(method = "lm") +
   labs(
-    title = "% of Respondents with Frequent Visits",
-    x = "",
-    y = "% of Frequent Visits"
+    title = "Frequent Visits and Crime",
+    x = "Part 1 Crime Rate (crimes per 1,000 estimated residents)",
+    y = "% of Respondents with Frequent Visits"
   ) +
-  scale_y_continuous(labels = scales::percent) -> a
+  scale_y_continuous(labels = scales::percent, limits = c(0,1), breaks = seq(0,1, by = .2)) +
+  scale_x_continuous(breaks = seq(0,250, by = 25), limits = c(0,250)) -> a
 ```
 
 We’ll make the same plot, but for the regular data:
@@ -712,11 +697,12 @@ ggplot(data = crime_reg, mapping = aes(prt1_rt, regular_pct/100)) +
   geom_point() +
   geom_smooth(method = "lm") +
   labs(
-    title = "% of Respondents with Regular Visits",
-    x = "Part 1 Crime Rate (per 1,000 estimated residents)",
-    y = "% of Regular Visits"
+    title = "Regular Visits and Crime",
+    x = "Part 1 Crime Rate (crimes per 1,000 estimated residents)",
+    y = "% of Respondents with Regular Visits"
   ) +
-  scale_y_continuous(labels = scales::percent, limits = c(0, 1)) -> b
+  scale_y_continuous(labels = scales::percent, limits = c(0,1), breaks = seq(0,1, by = .2)) +
+  scale_x_continuous(breaks = seq(0,250, by = 25), limits = c(0,250)) -> b
 ```
 
 Then, we’ll stitch both together using the `cowplot` package:
@@ -724,9 +710,14 @@ Then, we’ll stitch both together using the `cowplot` package:
 ``` r
 # create plot grid
 c <- plot_grid(a, b, labels = c('A', 'B'), ncol = 1, align = "v")
+```
 
+    ## `geom_smooth()` using formula 'y ~ x'
+    ## `geom_smooth()` using formula 'y ~ x'
+
+``` r
 # save plot
-ggsave(filename = here("results", "rate_plots.png"), dpi = 500, units = "in", width = 8, height = 8 )
+ggsave(filename = here("results", "figure6.pdf"), dpi = 600, units = "in", width = 8, height = 8 )
 
 # clean-up
 rm(a, b, c)
